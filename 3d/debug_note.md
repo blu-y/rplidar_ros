@@ -28,14 +28,23 @@ local lib에는 라이브러리가 있어도 ros package 실행 시 anaconda lib
 해결법  
 anaconda lib에 usr lib 링크
 ```
-rm /home/xx/anaconda3/lib/libstdc++.so.6
+rm anaconda3/lib/libstdc++.so.6
 cp /usr/lib/x86_64-linux-gnu/libstdc++.so.6.0.30 ~/anaconda3/lib
 ln -s ~/anaconda3/lib/libstdc++.so.6.0.30 ~/anaconda3/lib/libstdc++.so.6
 ```
 
+```
+rm ~/anaconda3/envs/rplidar/lib/libstdc++.so.6
+cp /usr/lib/x86_64-linux-gnu/libstdc++.so.6.0.30 ~/anaconda3/envs/rplidar/lib
+ln -s ~/anaconda3/envs/rplidar/lib/libstdc++.so.6.0.30 ~/anaconda3/envs/rplidar/lib/libstdc++.so.6
+```
 
 ##### PCD Viewer[(Link)](https://manpages.ubuntu.com/manpages/focal/man1/pcl_pcd_viewer.1.html)
 ```
 sudo apt install pcd-tools -y
 pcl_viewer <PCD file>
+```
+```
+sudo apt install ros-humble-tf-transformations
+pip install transforms3d
 ```

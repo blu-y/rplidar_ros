@@ -75,6 +75,7 @@ class RPlidarNode : public rclcpp::Node
         this->declare_parameter<std::string>("frame_id","laser_frame");
         this->declare_parameter<bool>("inverted", false);
         this->declare_parameter<bool>("angle_compensate", false);
+        this->declare_parameter<int>("stepper_rpm",12);
         this->declare_parameter<bool>("flip_x_axis", false);
         this->declare_parameter<bool>("auto_standby", false);
         this->declare_parameter<std::string>("topic_name",std::string("scan"));
@@ -91,6 +92,7 @@ class RPlidarNode : public rclcpp::Node
         this->get_parameter_or<std::string>("frame_id", frame_id, "laser_frame");
         this->get_parameter_or<bool>("inverted", inverted, false);
         this->get_parameter_or<bool>("angle_compensate", angle_compensate, false);
+        this->get_parameter_or<int>("stepper_rpm", stepper_rpm, 12);
         this->get_parameter_or<bool>("flip_x_axis", flip_x_axis, false);
         this->get_parameter_or<bool>("auto_standby", auto_standby, false);
         this->get_parameter_or<std::string>("topic_name", topic_name, "scan");
@@ -542,6 +544,7 @@ public:
     std::string frame_id;
     bool inverted = false;
     bool angle_compensate = true;
+    int stepper_rpm = 12;
     bool flip_x_axis = false;
     bool auto_standby = false;
     float max_distance = 8.0;
