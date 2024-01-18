@@ -1,6 +1,5 @@
 
 ##### ERROR GLIBCXX_*.*.** not found
-
 증상  
 ```
 oscar@oscar-lab:~/ros2_ws$ ros2 launch rplidar_ros view_rplidar_s1_launch.py 
@@ -48,3 +47,10 @@ pcl_viewer <PCD file>
 sudo apt install ros-humble-tf-transformations
 pip install transforms3d
 ```
+
+##### TODO
+1. Make python to publish 3D points
+    1) Peak detecting or Syncronizing(with Arduino)
+    2) Publishing points per 0.5 rev
+    3) First Stage: before 0.5 rev
+    4) Second Stage: substitute existing points(queueing)

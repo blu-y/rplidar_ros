@@ -87,19 +87,19 @@ class ScanToPCNode(Node):
             z = 0
             points.append([x, y, z])
         
-        ###############
-        # check first #
-        ###############
+        ##################
+        #   check first  #
+        ##################
         pass
 
-        ###############
-        # check peaks #
-        ###############
+        ##################
+        #   check peaks  #
+        ##################
         pass
 
-        ###############
-        #  deal peaks #
-        ###############
+        ##################
+        #   deal peaks   #
+        ##################
         if self.reverse == -1:
             self.pointq.append(points)
         elif self.reverse == 0:
