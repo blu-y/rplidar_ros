@@ -49,8 +49,11 @@ pip install transforms3d
 ```
 
 ##### TODO
-1. Make python to publish 3D points
+1. Make python to publish 3D points (wor2.py)
     1) Peak detecting or Syncronizing(with Arduino)
     2) Publishing points per 0.5 rev
     3) First Stage: before 0.5 rev
     4) Second Stage: substitute existing points(queueing)
+2. Embedding Arduino with ROS (new_uno.ino)
+    1) Serial communication
+3. Subscribe stepper location (rplidar_node.cpp)
