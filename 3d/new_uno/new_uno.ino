@@ -5,8 +5,8 @@
 #define MP4  11 // IN4 on the ULN2003
 // 28BYJ-48 stepper motor
 const int spr = 2048;  // Steps required for one full rotation
-// const int rpm = 6;     // rpm = 6; 5-second half rotation
-const int rpm = 12;     // rpm = 12; 2.5-second half rotation
+const int rpm = 6;     // rpm = 6; 5-second half rotation
+// const int rpm = 12;     // rpm = 12; 2.5-second half rotation
 Stepper cw(spr, MP4, MP2, MP3, MP1);
 Stepper ccw(spr, MP1, MP3, MP2, MP4);
 void setup() {

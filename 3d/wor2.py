@@ -4,6 +4,7 @@ import datetime
 import math
 import numpy as np
 import rclpy
+from time import time
 from rclpy.node import Node
 from std_msgs.msg import Header
 from sensor_msgs.msg import LaserScan, PointCloud2, PointField
@@ -15,22 +16,29 @@ class ScanToPCNode(Node):
     def __init__(self):
         super().__init__('scan2pc')
 
-        # 폴더 생성 (이미 존재하는 경우 생성하지 않음)
-        if not os.path.exists('pcd'):
-            os.makedirs('pcd')
+        self.save = True
+        self.rpm = 6
+        self.hz = 10
 
-        self.rpm = 12
-        self.step_time = 60/self.rpm/2
-        self.sx = 0
-        self.sy = 0
+        self.rev_time = 30/self.rpm
+        self.rev_size = 30/self.rpm*self.hz
+        self.yaw_step = np.pi/self.rev_size
+        self.index = 0
         self.yaw = 0
+        self.init = False
         self.rotation_angle = 0  # 라이더 센서의 회전 각도
         self.rotation_speed = math.radians(50)  # 초당 회전 속도 (라디안 단위)
         self.previous_time = self.get_clock().now().to_msg()
-
         self.fields = [PointField(name='x', offset=0, datatype=PointField.FLOAT32, count=1),
                   PointField(name='y', offset=4, datatype=PointField.FLOAT32, count=1),
                   PointField(name='z', offset=8, datatype=PointField.FLOAT32, count=1)]
+        self.time = time()
+        self.points3d = []
+
+
+        # 폴더 생성 (이미 존재하는 경우 생성하지 않음)
+        if not os.path.exists('pcd'):
+            os.makedirs('pcd')
 
         self.subscription = self.create_subscription(
             LaserScan,
@@ -42,7 +50,7 @@ class ScanToPCNode(Node):
             '/laser_cloud_surround_hector',
             10)
         self.pointq = []
-        self.reverse = -1
+        self.reverse = False
 
         self.get_logger().info('Node initialized')
 
@@ -68,29 +76,45 @@ class ScanToPCNode(Node):
         self.rotation_angle += self.rotation_speed * (current_time.nanosec - self.previous_time.nanosec)
         self.previous_time = current_time
 
-        points = []
-        for a in range(len(data.ranges)):
-            if not np.isfinite(data.ranges[a]):
-                continue  # 유효하지 않은 값은 건너뜁니다.
+        if not self.init:
+            self.ang = np.array(list(range(len(data.ranges))))
+            self.ang = self.ang * data.angle_increment + data.angle_min
+            self.xmul = np.cos(self.ang)
+            self.ymul = np.sin(self.ang)
+            self.init = True
+        arr = np.array(data.ranges)
+        x = arr*self.xmul
+        y = arr*self.ymul
+        z = np.array([0]*len(data.ranges))
+        # rotate 90deg y-axis: [x,y,z] -> [z,y,-x]
+        arr = np.transpose(np.array([z,y,-x]))
 
-            ang = data.angle_increment * a + data.angle_min
-            tmp_x = (data.ranges[a] * np.cos(ang))
-            tmp_y = (data.ranges[a] * np.sin(ang))
-            rotated_x = np.cos(self.rotation_angle) * tmp_x - np.sin(self.rotation_angle) * tmp_y
-            rotated_y = np.sin(self.rotation_angle) * tmp_x + np.cos(self.rotation_angle) * tmp_y
+        # rotate z-axis
+        if time()-self.time >= self.rev_time:
+            if self.save: self.save_to_pcd(self.points3d)
+            self.points3d = []
+            self.reverse = not self.reverse
+            if self.reverse:
+                print("ccw")
+                self.yaw = np.pi
+            else: 
+                print("cw")
+                self.yaw = 0
+            self.time = time()        
+        rot = np.array([[np.cos(self.yaw), 0-np.sin(self.yaw), 0],
+                        [np.sin(self.yaw), np.cos(self.yaw), 0],
+                        [0,0,1]])
+        print(rot)
+        arr = np.matmul(arr,rot)
+        if self.reverse:
+            self.yaw -= self.yaw_step
+        else:
+            self.yaw += self.yaw_step
 
-            if not (np.isfinite(rotated_x) and np.isfinite(rotated_y)):
-                continue  # 여기에서도 유효하지 않은 값은 건너뜁니다.
-
-            x = self.sx + rotated_x
-            y = self.sy + rotated_y
-            z = 0
-            points.append([x, y, z])
-        
-        ##################
-        #   check first  #
-        ##################
-        pass
+        points = arr.tolist()
+        print(len(points))
+        self.points3d += points
+        print(len(self.points3d))
 
         ##################
         #   check peaks  #
@@ -100,22 +124,18 @@ class ScanToPCNode(Node):
         ##################
         #   deal peaks   #
         ##################
-        if self.reverse == -1:
-            self.pointq.append(points)
-        elif self.reverse == 0:
-            self.pointq.pop()
-            self.pointq.
+        # if self.reverse == -1:
+        #     self.pointq.append(points)
+        # elif self.reverse == 0:
+        #     self.pointq.pop()
+        #     self.pointq.
 
         # 포인트 클라우드 데이터를 PCD 파일로 저장
-
         header = Header()
-        header.frame_id = "laser_link"
+        header.frame_id = "laser"
         pc2 = point_cloud2.create_cloud(header, self.fields, points)
         pc2.header.stamp = self.get_clock().now().to_msg()
         self.publisher.publish(pc2)
-
-        if True:
-            self.save_to_pcd(points)
 
 def main(args=None):
     rclpy.init(args=args)
