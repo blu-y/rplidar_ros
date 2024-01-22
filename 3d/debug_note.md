@@ -1,5 +1,5 @@
 
-##### ERROR GLIBCXX_*.*.** not found
+### ERROR GLIBCXX_*.*.** not found
 증상  
 ```
 oscar@oscar-lab:~/ros2_ws$ ros2 launch rplidar_ros view_rplidar_s1_launch.py 
@@ -38,7 +38,7 @@ cp /usr/lib/x86_64-linux-gnu/libstdc++.so.6.0.30 ~/anaconda3/envs/rplidar/lib
 ln -s ~/anaconda3/envs/rplidar/lib/libstdc++.so.6.0.30 ~/anaconda3/envs/rplidar/lib/libstdc++.so.6
 ```
 
-##### PCD Viewer[(Link)](https://manpages.ubuntu.com/manpages/focal/man1/pcl_pcd_viewer.1.html)
+### PCD Viewer[(Link)](https://manpages.ubuntu.com/manpages/focal/man1/pcl_pcd_viewer.1.html)
 ```
 sudo apt install pcd-tools -y
 pcl_viewer <PCD file>
@@ -48,7 +48,7 @@ sudo apt install ros-humble-tf-transformations
 pip install transforms3d
 ```
 
-##### TODO
+### TODO
 1. Make python to publish 3D points (wor2.py)
     1) Peak detecting or Syncronizing(with Arduino)
     2) Publishing points per 0.5 rev
@@ -56,4 +56,4 @@ pip install transforms3d
     4) Second Stage: substitute existing points(queueing)
 2. Embedding Arduino with ROS (new_uno.ino)
     1) Serial communication
-3. Subscribe stepper location (rplidar_node.cpp)
+3. Subscribe stepper location
