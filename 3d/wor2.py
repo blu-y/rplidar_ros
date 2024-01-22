@@ -11,15 +11,20 @@ from sensor_msgs.msg import LaserScan, PointCloud2, PointField
 from geometry_msgs.msg import PoseStamped
 from tf_transformations import quaternion_from_euler, euler_from_quaternion
 from sensor_msgs_py import point_cloud2
+import serial
 
 class ScanToPCNode(Node):
     def __init__(self):
         super().__init__('scan2pc')
 
-        self.save = True
-        self.rpm = 6
-        self.hz = 10
 
+        #PARAMETERS###########################################################
+        self.save = True                                                     #
+        self.rpm = 2                                                         #
+        self.hz = 10                                                         #
+        self.port = '/dev/ttyACM0'                                           #
+        ######################################################################
+        self.serial = serial.Serial(self.port 9600, timeout=1)
         self.rev_time = 30/self.rpm
         self.rev_size = 30/self.rpm*self.hz
         self.yaw_step = np.pi/self.rev_size
@@ -32,7 +37,7 @@ class ScanToPCNode(Node):
         self.fields = [PointField(name='x', offset=0, datatype=PointField.FLOAT32, count=1),
                   PointField(name='y', offset=4, datatype=PointField.FLOAT32, count=1),
                   PointField(name='z', offset=8, datatype=PointField.FLOAT32, count=1)]
-        self.time = time()
+        #self.time = time()
         self.points3d = []
 
 
@@ -50,7 +55,8 @@ class ScanToPCNode(Node):
             '/laser_cloud_surround_hector',
             10)
         self.pointq = []
-        self.reverse = False
+        self.reverse = None
+        self.flip = False
 
         self.get_logger().info('Node initialized')
 
@@ -89,22 +95,22 @@ class ScanToPCNode(Node):
         # rotate 90deg y-axis: [x,y,z] -> [z,y,-x]
         arr = np.transpose(np.array([z,y,-x]))
 
+        self.check_rotation()
         # rotate z-axis
-        if time()-self.time >= self.rev_time:
-            if self.save: self.save_to_pcd(self.points3d)
+        if self.flip:
+            if self.save and not self.reverse==None: self.save_to_pcd(self.points3d)
             self.points3d = []
-            self.reverse = not self.reverse
+            self.flip = False
             if self.reverse:
-                print("ccw")
+                #print("ccw")
                 self.yaw = np.pi
             else: 
-                print("cw")
-                self.yaw = 0
-            self.time = time()        
+                #print("cw")
+                self.yaw = 0    
         rot = np.array([[np.cos(self.yaw), 0-np.sin(self.yaw), 0],
                         [np.sin(self.yaw), np.cos(self.yaw), 0],
                         [0,0,1]])
-        print(rot)
+        #print(rot)
         arr = np.matmul(arr,rot)
         if self.reverse:
             self.yaw -= self.yaw_step
@@ -112,30 +118,21 @@ class ScanToPCNode(Node):
             self.yaw += self.yaw_step
 
         points = arr.tolist()
-        print(len(points))
         self.points3d += points
-        print(len(self.points3d))
 
-        ##################
-        #   check peaks  #
-        ##################
-        pass
-
-        ##################
-        #   deal peaks   #
-        ##################
-        # if self.reverse == -1:
-        #     self.pointq.append(points)
-        # elif self.reverse == 0:
-        #     self.pointq.pop()
-        #     self.pointq.
-
-        # 포인트 클라우드 데이터를 PCD 파일로 저장
         header = Header()
         header.frame_id = "laser"
         pc2 = point_cloud2.create_cloud(header, self.fields, points)
         pc2.header.stamp = self.get_clock().now().to_msg()
         self.publisher.publish(pc2)
+
+    def check_rotation(self):
+        if self.serial.in_waiting > 0:
+            line = self.serial.readline().decode('utf-8').rstrip()
+            print(line)
+            self.flip = True
+            if line == "ccw": self.reverse = True
+            else: self.reverse = False
 
 def main(args=None):
     rclpy.init(args=args)
