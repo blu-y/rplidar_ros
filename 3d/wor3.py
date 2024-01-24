@@ -23,10 +23,11 @@ class ScanToPCNode(Node):
         self.rpm = 2                                                         #
         self.hz = 10                                                         #
         self.port = '/dev/ttyACM0'                                           #
+        self.baudrate = 9600                                                 #
         ######################################################################
 
 
-        self.serial = serial.Serial(self.port, 9600, timeout=1)
+        self.serial = serial.Serial(self.port, self.baudrate, timeout=1)
         self.rev_time = 30/self.rpm
         self.rev_size = 30/self.rpm*self.hz
         self.yaw_step = np.pi/self.rev_size
